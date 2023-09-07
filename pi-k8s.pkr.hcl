@@ -76,7 +76,7 @@ locals {
     ssh_pwauth      = true
     users           = local.users
     package_update  = true
-    package_upgrade = true
+    package_upgrade = false
     apt             = local.apt
     packages        = local.packages
     write_files     = local.write_files
@@ -149,6 +149,17 @@ build {
   provisioner "shell" {
     inline = [
       "echo 'Waiting for cloud-init ....'; while [ ! -f /var/lib/cloud/instance/boot-finished ]; do sleep 1; done; echo 'Done'",
+    ]
+  }
+
+  provisioner "breakpoint" {
+    disable = false
+    note    = "this is a breakpoint"
+  }
+
+  provisioner "shell" {
+    inline = [
+      "sudo apt-get upgrade",
     ]
   }
 

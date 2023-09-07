@@ -4,14 +4,35 @@ locals {
     "apt-transport-https",
     "ca-certificates",
     "curl",
-    "gnupg",
-    "lsb-release",
-    "cri-o",
-    "cri-o-runc",
-    "kubectl",
-    "kubeadm",
-    "kubelet",
-    "helm",
+
+    "libraspberrypi-bin",
+
+    "linux-headers-raspi",
+    "linux-image-raspi",
+    "linux-firmware-raspi",
+    "linux-raspi",
+    "linux-modules-extra-raspi",
+    "linux-tools-raspi",
+
+    "open-iscsi",
+    "pibootctl",
+
+    "raspi-config",
+    "rpiboot",
+    "rpi-eeprom",
+
+    "ubuntu-raspi-settings",
+    "ubuntu-server-raspi",
+    "u-boot-rpi",
+
+#    "gnupg",
+#    "lsb-release",
+#    "cri-o",
+#    "cri-o-runc",
+#    "kubectl",
+#    "kubeadm",
+#    "kubelet",
+#    "helm",
   ]
 }
 
