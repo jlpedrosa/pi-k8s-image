@@ -81,6 +81,15 @@ locals {
     packages        = local.packages
     write_files     = local.write_files
     runcmd          = local.runcmd
+
+    bootcmd         = [
+      "FK_MACHINE=\"Raspberry Pi 4 Model B Rev 1.5\" >>  /etc/environment",
+      "echo \"yes\" > /etc/flash-kernel/ignore-efi",
+      # this terrible hack is to avoid checking if it's actually running on EFI (which we are in qemu)
+      # in the next version this can be overriden by writing "yes" to /etc/flash-kernel/ignore-efi (as done in this script)
+      # the version where it is fixed is https://sources.debian.org/src/flash-kernel/3.107/
+      "sed '1022,1026d' /usr/share/flash-kernel/functions"
+    ]
   })
 }
 
@@ -92,7 +101,7 @@ source "qemu" "ubuntu" {
   machine_type   = "virt"
   qemu_binary    = "qemu-system-aarch64"
   accelerator    = "none"
-  memory         = 4096
+  memory         = 8096
   cpus           = 8
   cpu_model      = "cortex-a72"
   vm_name        = var.vm_name
@@ -130,6 +139,7 @@ source "qemu" "ubuntu" {
   cd_content = {
     "meta-data" = templatefile("meta-data", {})
     "user-data" = format("#cloud-config\n%s", local.user_data)
+    "config.txt" = templatefile("config.txt", {})
   }
 
   qemuargs = [
@@ -148,7 +158,13 @@ build {
 
   provisioner "shell" {
     inline = [
-      "echo 'Waiting for cloud-init ....'; while [ ! -f /var/lib/cloud/instance/boot-finished ]; do sleep 1; done; echo 'Done'",
+      "echo 'Waiting for cloud-init ....'; while [ ! -f /var/lib/cloud/instance/boot-finished ]; do sleep 5; done; echo 'Done'",
+    ]
+  }
+
+  provisioner "shell" {
+    inline = [
+      "sudo apt autoremove --purge && sudo apt-get upgrade"
     ]
   }
 
@@ -159,13 +175,20 @@ build {
 
   provisioner "shell" {
     inline = [
-      "sudo apt autoremove --purge && sudo apt-get upgrade",
+      "sudo FK_MACHINE=\"Raspberry Pi 4 Model B Rev 1.5\" flash-kernel --force 5.15.0-1036-raspi"
     ]
   }
 
-#  provisioner "shell" {
-#    inline = [
-#      "sudo cloud-init clean",
-#    ]
-#  }
+  provisioner "shell" {
+    inline = [
+      # Delete UEFI partition
+      "sudo parted /dev/$(sudo lsblk -no NAME  /dev/disk/by-label/cloudimg-rootfs) rm $(sudo lsblk -no NAME  /dev/disk/by-label/cloudimg-rootfs)"
+    ]
+  }
+
+  provisioner "shell" {
+    inline = [
+      "sudo cloud-init clean",
+    ]
+  }
 }
