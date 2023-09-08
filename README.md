@@ -26,7 +26,7 @@ Add package repository from [hashicorp instructions](https://developer.hashicorp
 ```bash
 wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
 echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
-sudo apt update && sudo apt-get install packer qemu-system-aarch64 libnfs-utils open-iscsi
+sudo apt update && sudo apt-get install packer qemu-system-aarch64 libnfs-utils open-iscsi jq
 ```
 
 On the ubuntu server on arm64 through [qemu guide](https://wiki.ubuntu.com/ARM64/QEMU#:~:text=Ubuntu%2Farm64%20can%20run%20inside,you%20have%20an%20arm64%20host) they reference the firmware ?
