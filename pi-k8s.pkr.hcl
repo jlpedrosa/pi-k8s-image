@@ -159,13 +159,13 @@ build {
 
   provisioner "shell" {
     inline = [
-      "sudo apt-get upgrade",
+      "sudo apt autoremove --purge && sudo apt-get upgrade",
     ]
   }
 
-  provisioner "shell" {
-    inline = [
-      "sudo cloud-init clean",
-    ]
-  }
+#  provisioner "shell" {
+#    inline = [
+#      "sudo cloud-init clean",
+#    ]
+#  }
 }

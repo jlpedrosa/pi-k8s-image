@@ -4,35 +4,28 @@ locals {
     "apt-transport-https",
     "ca-certificates",
     "curl",
-
     "libraspberrypi-bin",
-
     "linux-headers-raspi",
     "linux-image-raspi",
     "linux-firmware-raspi",
     "linux-raspi",
     "linux-modules-extra-raspi",
     "linux-tools-raspi",
-
-    "open-iscsi",
     "pibootctl",
-
     "raspi-config",
     "rpiboot",
     "rpi-eeprom",
-
     "ubuntu-raspi-settings",
     "ubuntu-server-raspi",
     "u-boot-rpi",
-
-#    "gnupg",
-#    "lsb-release",
-#    "cri-o",
-#    "cri-o-runc",
-#    "kubectl",
-#    "kubeadm",
-#    "kubelet",
-#    "helm",
+    "gnupg",
+    "lsb-release",
+    "cri-o",
+    "cri-o-runc",
+    "kubectl",
+    "kubeadm",
+    "kubelet",
+    "helm",
   ]
 }
 
@@ -149,7 +142,7 @@ Pu9n
 EOT
       }
       "helm.list" = {
-        source = "deb [arch=amd64] https://baltocdn.com/helm/stable/debian/ all main"
+        source = "deb [arch=arm64] https://baltocdn.com/helm/stable/debian/ all main"
         key    = <<EOT
 -----BEGIN PGP PUBLIC KEY BLOCK-----
 

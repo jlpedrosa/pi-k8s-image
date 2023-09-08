@@ -2,4 +2,4 @@
 .idea
 **.img
 AAVMF_CODE.fd
-packer-output
+packer-output**
