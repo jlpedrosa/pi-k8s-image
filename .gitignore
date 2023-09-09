@@ -1,5 +1,10 @@
 .terraform
+.terraform.lock.hcl
+.terraform.tfstate.lock.info
+
 .idea
+.vscode
+
 **.img
 AAVMF_CODE.fd
 packer-output**

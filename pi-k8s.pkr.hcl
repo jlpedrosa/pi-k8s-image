@@ -182,7 +182,7 @@ build {
   }
 
   provisioner "breakpoint" {
-    disable = false
+    disable = true
     note    = "this is a breakpoint"
   }
 

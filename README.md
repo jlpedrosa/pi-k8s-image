@@ -17,7 +17,6 @@ be run as root as the
 * Fix hostname in packer for the machines. (or multi staged builds P0)
 * Customize the meta-data in packer (P0)
 * Understand what is cloud-init doing on the destination machines, if it already run correctly. Disable all other providers (P1)
-* Need to fix the part of removing the old kernels (P1)
 * Need to do multistaged builds so it can build only 1 image (P2)
 * Trying packer native in the raspberry itself, it may be faster (P2)
 * Disable automatic eeprom updates (P2)
