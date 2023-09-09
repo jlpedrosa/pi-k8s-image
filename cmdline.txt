@@ -1,0 +1,1 @@
+console=serial0,115200 dwc_otg.lpm_enable=0 console=tty1 root=/dev/sda1 rootfstype=ext4 ISCSI_INITIATOR=iqn.2019-09.us.tswn.us:pi3 ISCSI_TARGET_NAME=$ISCSI_TARGET_IQN ISCSI_TARGET_IP=$ISCSI_TARGET_IP rootwait fixrtc nosplash

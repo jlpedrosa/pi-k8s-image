@@ -11,6 +11,15 @@ packer {
   }
 }
 
+locals {
+  pis = {
+    "pi01" : {}
+    "pi02" : {}
+    "pi03" : {}
+    "pi04" : {}
+  }
+}
+
 variable "vm_name" {
   default     = "arm64-ubuntu"
   description = "the name of the temoral VM used to generate the images"
@@ -75,9 +84,21 @@ locals {
   user_data = jsonencode({
     ssh_pwauth      = true
     users           = local.users
+    timezone        = "Europe/Dublin"
+    bootcmd         = [
+      "echo 'Raspberry Pi 4 Model B Rev 1.5' > /etc/flash-kernel/machine",
+      "echo 'yes' > /etc/flash-kernel/ignore-efi",
+      "mkdir /boot/firmware",
+
+      # this terrible hack is to avoid checking if it's actually running on EFI (which we are in qemu)
+      # in the next version this can be overriden by writing "yes" to /etc/flash-kernel/ignore-efi (as done in this script)
+      # the version where it is fixed is https://sources.debian.org/src/flash-kernel/3.107/ (and uses ignore-efi)
+      "sed  -i '1022,1026d' /usr/share/flash-kernel/functions"
+    ]
+
+    apt             = local.apt
     package_update  = true
     package_upgrade = false
-    apt             = local.apt
     packages        = local.packages
     write_files     = local.write_files
     runcmd          = local.runcmd
@@ -92,10 +113,9 @@ source "qemu" "ubuntu" {
   machine_type   = "virt"
   qemu_binary    = "qemu-system-aarch64"
   accelerator    = "none"
-  memory         = 4096
+  memory         = 8096
   cpus           = 8
   cpu_model      = "cortex-a72"
-  vm_name        = var.vm_name
 
   headless            = false
   use_default_display = true
@@ -106,12 +126,12 @@ source "qemu" "ubuntu" {
 
   # Force vnc to 6000 so we can login easily for debugging
   vnc_port_min = 6000
-  vnc_port_max = 6000
+  vnc_port_max = 6010
   disable_vnc  = false
 
   # Force ssh to 2222 so we can login easily for debugging
   host_port_min = 2222
-  host_port_max = 2222
+  host_port_max = 2232
 
   # Source disk configuration, use the ISO but as a disk so it can be written by cloud-init
   # this disk will be also the result of the build
@@ -124,12 +144,13 @@ source "qemu" "ubuntu" {
   format           = "raw"
   output_directory = var.output_directory
 
-  # cloud-init will get removable devices with "cidata" lablel, so we create a CD-ROM with
+  # cloud-init will get removable devices with "cidata" label, so we create a CD-ROM with
   # user-data, meta-data.
   cd_label = "cidata"
   cd_content = {
     "meta-data" = templatefile("meta-data", {})
     "user-data" = format("#cloud-config\n%s", local.user_data)
+    "config.txt" = templatefile("config.txt", {})
   }
 
   qemuargs = [
@@ -144,11 +165,19 @@ source "qemu" "ubuntu" {
 }
 
 build {
-  sources = ["source.qemu.ubuntu"]
+
+  dynamic "source" {
+    for_each = local.pis
+    labels   = ["qemu.ubuntu"]
+    content {
+      name    = source.key
+      vm_name = source.key
+    }
+  }
 
   provisioner "shell" {
     inline = [
-      "echo 'Waiting for cloud-init ....'; while [ ! -f /var/lib/cloud/instance/boot-finished ]; do sleep 1; done; echo 'Done'",
+      "echo 'Waiting for cloud-init ....'; while [ ! -f /var/lib/cloud/instance/boot-finished ]; do sleep 5; done; echo 'Done'",
     ]
   }
 
@@ -157,11 +186,14 @@ build {
     note    = "this is a breakpoint"
   }
 
-  provisioner "shell" {
-    inline = [
-      "sudo apt autoremove --purge && sudo apt-get upgrade",
-    ]
-  }
+#  provisioner "shell" {
+#    inline = [
+#      // uninstall non rapi kernels
+#      "DEBIAN_FRONTEND=noninteractive; sudo apt-get remove --assume-yes $(apt list --installed | grep -E 'virtual|generic' 2>/dev/null  | awk -F'/' '{printf(\"%s \",$1)} END { printf \"\\n\" }')",
+#      // uninstall unused packages
+#      "DEBIAN_FRONTEND=noninteractive; sudo apt autoremove --purge && sudo apt-get upgrade"
+#    ]
+#  }
 
 #  provisioner "shell" {
 #    inline = [

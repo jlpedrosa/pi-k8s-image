@@ -4,6 +4,9 @@ locals {
     "apt-transport-https",
     "ca-certificates",
     "curl",
+    "gnupg",
+    "lsb-release",
+
     "libraspberrypi-bin",
     "linux-headers-raspi",
     "linux-image-raspi",
@@ -18,8 +21,6 @@ locals {
     "ubuntu-raspi-settings",
     "ubuntu-server-raspi",
     "u-boot-rpi",
-    "gnupg",
-    "lsb-release",
     "cri-o",
     "cri-o-runc",
     "kubectl",
