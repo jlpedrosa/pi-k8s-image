@@ -186,14 +186,14 @@ build {
     note    = "this is a breakpoint"
   }
 
-#  provisioner "shell" {
-#    inline = [
-#      // uninstall non rapi kernels
-#      "DEBIAN_FRONTEND=noninteractive; sudo apt-get remove --assume-yes $(apt list --installed | grep -E 'virtual|generic' 2>/dev/null  | awk -F'/' '{printf(\"%s \",$1)} END { printf \"\\n\" }')",
-#      // uninstall unused packages
-#      "DEBIAN_FRONTEND=noninteractive; sudo apt autoremove --purge && sudo apt-get upgrade"
-#    ]
-#  }
+  provisioner "shell" {
+    inline = [
+      // uninstall non rapi kernels
+      "sudo DEBIAN_FRONTEND=noninteractive apt-get purge --assume-yes $(apt list --installed | grep -E 'virtual|generic' 2>/dev/null  | awk -F'/' '{printf(\"%s \",$1)} END { printf \"\\n\" }')",
+      // uninstall unused packages
+      "sudo DEBIAN_FRONTEND=noninteractive apt autoremove --purge && sudo apt-get upgrade"
+    ]
+  }
 
 #  provisioner "shell" {
 #    inline = [
