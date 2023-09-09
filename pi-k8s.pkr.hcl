@@ -84,6 +84,7 @@ locals {
   user_data = jsonencode({
     ssh_pwauth      = true
     users           = local.users
+    timezone        = "Europe/Dublin"
     bootcmd         = [
       "echo 'Raspberry Pi 4 Model B Rev 1.5' > /etc/flash-kernel/machine",
       "echo 'yes' > /etc/flash-kernel/ignore-efi",
@@ -94,10 +95,10 @@ locals {
       # the version where it is fixed is https://sources.debian.org/src/flash-kernel/3.107/ (and uses ignore-efi)
       "sed  -i '1022,1026d' /usr/share/flash-kernel/functions"
     ]
-    timezone        = "Europe/Dublin"
+
+    apt             = local.apt
     package_update  = true
     package_upgrade = false
-    apt             = local.apt
     packages        = local.packages
     write_files     = local.write_files
     runcmd          = local.runcmd
@@ -180,15 +181,6 @@ build {
     ]
   }
 
-  provisioner "shell" {
-    inline = [
-      // uninstall non rapi kernels
-      "sudo apt-get remove $(apt list --installed | grep -E 'virtual|generic' 2>/dev/null  | awk -F'/' '{printf(\"%s \",$1)} END { printf \"\n\" }')",
-      // uninstall unused packages
-      "sudo apt autoremove --purge && sudo apt-get upgrade"
-    ]
-  }
-
   provisioner "breakpoint" {
     disable = false
     note    = "this is a breakpoint"
@@ -196,11 +188,13 @@ build {
 
 #  provisioner "shell" {
 #    inline = [
-#      # Delete UEFI partition
-#      "sudo parted /dev/$(sudo lsblk -no NAME  /dev/disk/by-label/cloudimg-rootfs) rm $(sudo lsblk -no NAME  /dev/disk/by-label/cloudimg-rootfs)"
+#      // uninstall non rapi kernels
+#      "DEBIAN_FRONTEND=noninteractive; sudo apt-get remove --assume-yes $(apt list --installed | grep -E 'virtual|generic' 2>/dev/null  | awk -F'/' '{printf(\"%s \",$1)} END { printf \"\\n\" }')",
+#      // uninstall unused packages
+#      "DEBIAN_FRONTEND=noninteractive; sudo apt autoremove --purge && sudo apt-get upgrade"
 #    ]
 #  }
-#
+
 #  provisioner "shell" {
 #    inline = [
 #      "sudo cloud-init clean",

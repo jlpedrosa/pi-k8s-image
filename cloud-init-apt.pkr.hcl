@@ -21,13 +21,12 @@ locals {
     "ubuntu-raspi-settings",
     "ubuntu-server-raspi",
     "u-boot-rpi",
-
-#    "cri-o",
-#    "cri-o-runc",
-#    "kubectl",
-#    "kubeadm",
-#    "kubelet",
-#    "helm",
+    "cri-o",
+    "cri-o-runc",
+    "kubectl",
+    "kubeadm",
+    "kubelet",
+    "helm",
   ]
 }
 
