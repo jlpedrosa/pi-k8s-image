@@ -12,12 +12,7 @@ packer {
 }
 
 locals {
-  pis = {
-    "pi01" : {}
-    "pi02" : {}
-    "pi03" : {}
-    "pi04" : {}
-  }
+  pis =  ["pi01", "pi02" , "pi03",  "pi04" ]
 }
 
 variable "vm_name" {
@@ -47,7 +42,7 @@ variable "output_directory" {
 
 }
 variable "disk_size" {
-  default = "32G"
+  default = "5G"
   description = "The size of the resulting/output/generated disk"
 }
 
@@ -59,6 +54,11 @@ variable "kube_version" {
 variable "operator_username" {
   default = "jose"
   description = "the name of the additional user to be created to connect the instances"
+}
+
+vartiable "domain" {
+  description = "the domain for the PIs created"
+  default = "awsd.tech"
 }
 
 variable "operator_ssh_pub_key" {
@@ -81,28 +81,35 @@ locals {
 # here we generate the json for cloud-init, so it performs all the configuration of the OS
 # the contents of these variables are located in the files "cloud-init-*-pkr.hcl
 locals {
-  user_data = jsonencode({
-    ssh_pwauth      = true
-    users           = local.users
-    timezone        = "Europe/Dublin"
-    bootcmd         = [
-      "echo 'Raspberry Pi 4 Model B Rev 1.5' > /etc/flash-kernel/machine",
-      "echo 'yes' > /etc/flash-kernel/ignore-efi",
-      "mkdir /boot/firmware",
+  pis_data = [for pi in local.pis :
+    {
+      hostname = pi
+      user_data = jsonencode({
+        hostname        = pi
+        fqdn            = "${pi}.${var.domain}"
+        ssh_pwauth      = true
+        users           = local.users
+        timezone        = "Europe/Dublin"
+        bootcmd         = [
+          "echo 'Raspberry Pi 4 Model B Rev 1.5' > /etc/flash-kernel/machine",
+          "echo 'yes' > /etc/flash-kernel/ignore-efi",
+          "mkdir /boot/firmware",
 
-      # this terrible hack is to avoid checking if it's actually running on EFI (which we are in qemu)
-      # in the next version this can be overriden by writing "yes" to /etc/flash-kernel/ignore-efi (as done in this script)
-      # the version where it is fixed is https://sources.debian.org/src/flash-kernel/3.107/ (and uses ignore-efi)
-      "sed  -i '1022,1026d' /usr/share/flash-kernel/functions"
-    ]
+          # this terrible hack is to avoid checking if it's actually running on EFI (which we are in qemu)
+          # in the next version this can be overriden by writing "yes" to /etc/flash-kernel/ignore-efi (as done in this script)
+          # the version where it is fixed is https://sources.debian.org/src/flash-kernel/3.107/ (and uses ignore-efi)
+          "sed  -i '1022,1026d' /usr/share/flash-kernel/functions"
+        ]
 
-    apt             = local.apt
-    package_update  = true
-    package_upgrade = false
-    packages        = local.packages
-    write_files     = local.write_files
-    runcmd          = local.runcmd
-  })
+        apt             = local.apt
+        package_update  = true
+        package_upgrade = false
+        packages        = local.packages
+        write_files     = local.write_files
+        runcmd          = local.runcmd
+      })
+    }
+  ]
 }
 
 # ARM vm, hopefully this will be close enough to a Raspberry pi.
@@ -144,15 +151,6 @@ source "qemu" "ubuntu" {
   format           = "raw"
   output_directory = var.output_directory
 
-  # cloud-init will get removable devices with "cidata" label, so we create a CD-ROM with
-  # user-data, meta-data.
-  cd_label = "cidata"
-  cd_content = {
-    "meta-data" = templatefile("meta-data", {})
-    "user-data" = format("#cloud-config\n%s", local.user_data)
-    "config.txt" = templatefile("config.txt", {})
-  }
-
   qemuargs = [
     ["-pflash", "AAVMF_CODE.fd"],
     ["-pflash", "flash1.img"],
@@ -167,11 +165,19 @@ source "qemu" "ubuntu" {
 build {
 
   dynamic "source" {
-    for_each = local.pis
+    for_each = local.pis_data
     labels   = ["qemu.ubuntu"]
     content {
-      name    = source.key
-      vm_name = source.key
+      name    = source.value.hostname
+      vm_name = source.value.hostname
+      # cloud-init will get removable devices with "cidata" label, so we create a CD-ROM with
+      # user-data, meta-data.
+      cd_label = "cidata"
+      cd_content = {
+        "meta-data" = templatefile("meta-data", {})
+        "user-data" = format("#cloud-config\n%s", source.value.user_data)
+        "config.txt" = templatefile("config.txt", {})
+      }
     }
   }
 
@@ -201,3 +207,4 @@ build {
 #    ]
 #  }
 }
+

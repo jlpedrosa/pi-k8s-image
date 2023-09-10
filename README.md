@@ -14,7 +14,6 @@ be run as root as the
 
 * Fix FSTAB on packer (P0)
 * Make overlays mounts in Qnap persistent (P0)
-* Fix hostname in packer for the machines. (or multi staged builds P0)
 * Customize the meta-data in packer (P0)
 * Understand what is cloud-init doing on the destination machines, if it already run correctly. Disable all other providers (P1)
 * Need to do multistaged builds so it can build only 1 image (P2)
@@ -23,7 +22,7 @@ be run as root as the
 * Make the list of PIs configurable and passed to packer and terraform (P3)
 * How the hell replace terraform (P3)
 * Get notification when new versions are available (P3)
-* Try to get packer to run direcly the kernel, so we can ditch the whole efi firmware and maybe we can start with the PI image directly. (P1)
+* Try to get packer to run directly the kernel, so we can ditch the whole efi firmware and maybe we can start with the PI image directly. (P1)
 
 ## Requirements
 A lot of patience, an x86_64 linux box, a lot of packages. 
