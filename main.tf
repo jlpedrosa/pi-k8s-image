@@ -104,6 +104,15 @@ resource "null_resource" "copy_firmware" {
   }
 }
 
+resource "null_resource" "umount_firmware" {
+  provisioner  "local-exec" {
+    command = "sudo umount ${local.temp_dir}; sudo rmdir ${local.temp_dir}"
+  }
+
+  depends_on = [
+    null_resource.copy_firmware,
+  ]
+}
 
 resource "null_resource" "prepare_pi_boot_filesystem" {
   for_each = local.pis
@@ -165,7 +174,6 @@ resource "null_resource" "disconnect_resources" {
   }
 
   depends_on = [
-    null_resource.copy_firmware,
     null_resource.transfer_root_volumes,
     null_resource.render_bootcmd
   ]
