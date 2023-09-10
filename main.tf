@@ -170,7 +170,7 @@ resource "null_resource" "transfer_root_volumes" {
 
 resource "null_resource" "disconnect_resources" {
   provisioner  "local-exec" {
-    command = "sudo iscsiadm -m session -u ; sudo iscsiadm -m node --op delete; sudo umount ${local.temp_dir}"
+    command = "sudo iscsiadm -m session -u ; sudo iscsiadm -m node --op delete"
   }
 
   depends_on = [
