@@ -56,7 +56,7 @@ variable "operator_username" {
   description = "the name of the additional user to be created to connect the instances"
 }
 
-vartiable "domain" {
+variable "domain" {
   description = "the domain for the PIs created"
   default = "awsd.tech"
 }
