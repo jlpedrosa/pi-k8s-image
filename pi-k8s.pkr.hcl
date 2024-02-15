@@ -11,9 +11,6 @@ packer {
   }
 }
 
-locals {
-  pis =  ["pi01", "pi02" , "pi03",  "pi04" ]
-}
 
 variable "vm_name" {
   default     = "arm64-ubuntu"
@@ -26,6 +23,10 @@ variable "iso_url" {
 variable "iso_checksum" {
   default     = "file:https://cloud-images.ubuntu.com/jammy/current/SHA256SUMS"
   description = "file with the contents of the checksums of the OS"
+}
+
+variable "pis" {
+  description = "map, keys are the names of the pis"
 }
 
 variable "ssh_username" {
@@ -47,7 +48,7 @@ variable "disk_size" {
 }
 
 variable "kube_version" {
-  default = "1.27.3"
+  default = "1.27103"
   description = "The version for kubernetes tools to be installed"
 }
 
@@ -81,7 +82,7 @@ locals {
 # here we generate the json for cloud-init, so it performs all the configuration of the OS
 # the contents of these variables are located in the files "cloud-init-*-pkr.hcl
 locals {
-  pis_data = [for pi in local.pis :
+  pis_data = [for pi, pival in var.pis :
     {
       hostname = pi
       user_data = jsonencode({
@@ -98,7 +99,7 @@ locals {
           # this terrible hack is to avoid checking if it's actually running on EFI (which we are in qemu)
           # in the next version this can be overriden by writing "yes" to /etc/flash-kernel/ignore-efi (as done in this script)
           # the version where it is fixed is https://sources.debian.org/src/flash-kernel/3.107/ (and uses ignore-efi)
-          "sed  -i '1022,1026d' /usr/share/flash-kernel/functions"
+          "sed  -i '1067,1072d' /usr/share/flash-kernel/functions"
         ]
 
         apt             = local.apt

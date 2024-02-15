@@ -1,57 +1,39 @@
 
 variable "storage_ip" {
   description = "The ip address of the storage server"
-  default = "10.40.10.100"
 }
 
 variable "storage_ssh_user" {
   description = "Username to connect to the remote server"
-  default = "jose"
 }
 
 variable "storage_ssh_private_key_path" {
-  description = "Username to connect to the remote server"
-  default = "~/.ssh/id_rsa"
+  description = "Path for the key of the user to connect to the remote server"
 }
-
 
 variable "root_tftp_folder" {
   description = "the folder in the remote server that is the root of the tftp server"
-  default = "/share/CACHEDEV2_DATA/tftproot"
 }
 
 variable "source_images_folder" {
   description = "the folder in the remote server that is the root of the tftp server"
-  default = "./packer-output"
+}
+
+variable "pis" {
+  description = "dictionary with the PIs, keys are pi name"
+  # //
+  #  "pi01" : {
+  #    "serial": "serial",
+  #   "mac_addr": "mac"
+  # },
 }
 
 locals {
-  pis = {
-    "pi01" = {
-      serial = "df8b9730"
-    }
-    "pi02"  = {
-      serial = "b91a8620"
-    }
-    "pi03"  = {
-      serial = "e8ad7890"
-    }
-    "pi04"  = {
-      serial = "eee1233d"
-    }
-  }
-  any_pi= element(keys(local.pis),1)
+  any_pi= element(keys(var.pis),1)
 }
 
 locals {
   storage_ssh_private_key = file(var.storage_ssh_private_key_path)
-  storage_connection =  {
-    type = "ssh"
-    host = var.storage_ip
-    user = var.storage_ssh_user
-    private_key = local.storage_ssh_private_key
-    timeout = "20s"
-  }
 }
 
 resource "null_resource" "discover_iscsi_targets" {
@@ -61,7 +43,7 @@ resource "null_resource" "discover_iscsi_targets" {
 }
 
 resource "null_resource" "connect_discs" {
-  for_each = local.pis
+  for_each = var.pis
   provisioner "local-exec" {
     command = "sudo iscsiadm -m node -T iqn.2004-04.com.qnap:tvs-882:iscsi.${each.key}.04a272 -p ${var.storage_ip} -l; sleep 5"
   }
@@ -85,10 +67,13 @@ resource "null_resource" "copy_firmware" {
     private_key = local.storage_ssh_private_key
     timeout = "20s"
   }
+
   provisioner "local-exec" {
     command = <<EOF
       mkdir ${local.temp_dir}
       sudo losetup --partscan --find ${var.source_images_folder}/${local.any_pi}
+      sync
+      sleep 10
       sudo mount -t ext4 /dev/disk/by-label/cloudimg-rootfs ${local.temp_dir}
     EOF
   }
@@ -104,9 +89,8 @@ resource "null_resource" "copy_firmware" {
   }
 }
 
-
 resource "null_resource" "prepare_pi_boot_filesystem" {
-  for_each = local.pis
+  for_each = var.pis
   connection {
     type = "ssh"
     host = var.storage_ip
@@ -128,7 +112,7 @@ resource "null_resource" "prepare_pi_boot_filesystem" {
 }
 
 resource "null_resource" "render_bootcmd" {
-  for_each = local.pis
+  for_each = var.pis
   connection {
     type = "ssh"
     host = var.storage_ip
@@ -148,10 +132,10 @@ resource "null_resource" "render_bootcmd" {
 }
 
 resource "null_resource" "transfer_root_volumes" {
-  for_each = local.pis
+  for_each = var.pis
 
   provisioner  "local-exec" {
-    command = "sudo dd bs=4M if=${var.source_images_folder}/${local.any_pi} of=/dev/disk/by-path/ip-${var.storage_ip}:3260-iscsi-iqn.2004-04.com.qnap:tvs-882:iscsi.${each.key}.04a272-lun-0 status=progress && sync"
+    command = "sudo dd bs=4M if=${var.source_images_folder}/${each.key} of=/dev/disk/by-path/ip-${var.storage_ip}:3260-iscsi-iqn.2004-04.com.qnap:tvs-882:iscsi.${each.key}.04a272-lun-0 status=progress && sync"
   }
 
   depends_on = [

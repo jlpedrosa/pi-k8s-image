@@ -1,5 +1,3 @@
-
-
 # Raspberry PI k8s image builder
 This repository goal is to create an automatic system to generate Raspberry PI images with all required packages
 to proceed to the installation of kubernetes.
@@ -13,10 +11,9 @@ heavily on the hability to ssh in the iscsi and tftp server (the same box in my 
 be run as root as the 
 
 * Fix FSTAB on packer (P0)
-* Make overlays mounts in Qnap persistent (P0)
 * Customize the meta-data in packer (P0)
 * Understand what is cloud-init doing on the destination machines, if it already run correctly. Disable all other providers (P1)
-* Need to do multistaged builds so it can build only 1 image (P2)
+* Need to do multistage builds, so it can build only 1 image (P2)
 * Trying packer native in the raspberry itself, it may be faster (P2)
 * Disable automatic eeprom updates (P2)
 * Make the list of PIs configurable and passed to packer and terraform (P3)
@@ -63,5 +60,26 @@ To deploy:
 ```bash
 terraform init; sudo terraform apply 
 ```
+
+## Persisting deployment overlay mount on QNAP
+Deployment creates some overlays on the TFTP to boot, as the files are the same for all the PIs, except the config
+We create an overlay of the firmware and the single file config.
+As there's no way to persist the fstab on this NAS, so we have to mount it on boot.
+From [qnap docs](https://www.qnap.com/en/how-to/faq/article/running-your-own-application-at-startup)
+```bash
+sudo -i mount $(/sbin/hal_app --get_boot_pd port_id=0)6 /tmp/config
+vi /tmp/config/autorun.sh  
+chmod +x /tmp/config/autorun.sh
+umount /tmp/config
+```
+
+the content of autorun.sh should look like something like: 
+```bash
+mount -t overlay overlay -o lowerdir=/share/CACHEDEV2_DATA/tftproot/firmware:/share/CACHEDEV2_DATA/tftproot/pi01 /share/CACHEDEV2_DATA/tftproot/YOUR_SERIAL
+mount -t overlay overlay -o lowerdir=/share/CACHEDEV2_DATA/tftproot/firmware:/share/CACHEDEV2_DATA/tftproot/pi02 /share/CACHEDEV2_DATA/tftproot/YOUR_SERIAL
+mount -t overlay overlay -o lowerdir=/share/CACHEDEV2_DATA/tftproot/firmware:/share/CACHEDEV2_DATA/tftproot/pi03 /share/CACHEDEV2_DATA/tftproot/YOUR_SERIAL
+mount -t overlay overlay -o lowerdir=/share/CACHEDEV2_DATA/tftproot/firmware:/share/CACHEDEV2_DATA/tftproot/pi04 /share/CACHEDEV2_DATA/tftproot/YOUR_SERIAL
+```
+
 
 
