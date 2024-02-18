@@ -60,6 +60,9 @@ To deploy:
 ```bash
 terraform init; sudo terraform apply 
 ```
+# Storage
+Create iscsi target with the name of the "pi" key in variables.json "pi01" .. "pi04"
+
 
 ## Persisting deployment overlay mount on QNAP
 Deployment creates some overlays on the TFTP to boot, as the files are the same for all the PIs, except the config
@@ -83,3 +86,9 @@ mount -t overlay overlay -o lowerdir=/share/CACHEDEV2_DATA/tftproot/firmware:/sh
 
 
 
+commands used:
+iscsiadm
+mount
+dd
+losetup
+sync

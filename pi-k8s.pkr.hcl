@@ -14,7 +14,7 @@ packer {
 
 variable "vm_name" {
   default     = "arm64-ubuntu"
-  description = "the name of the temoral VM used to generate the images"
+  description = "the name of the temporal VM used to generate the images"
 }
 variable "iso_url" {
   default     = "https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-arm64.img"

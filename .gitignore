@@ -8,4 +8,6 @@ terraform.tfstate
 
 **.img
 AAVMF_CODE.fd
-packer-output**
+packer-output-golden
+packer-output-broken
+packer-output

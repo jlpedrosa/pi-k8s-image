@@ -56,9 +56,6 @@ locals {
   temp_dir = "/tmp/mounted"
 }
 
-// sudo scp -r $${TEMP_DIR}/boot/firmware -i "${var.storage_ssh_private_key_path}" ${var.storage_ssh_user}@${var.storage_ip}:${var.root_tftp_folder}
-// #      sudo umount $${TEMP_DIR}
-//#      sudo losetup --detach $(sudo losetup -j ${var.source_images_folder}/${local.any_pi} -O NAME -n | tr -d '\n')
 resource "null_resource" "copy_firmware" {
   connection {
     type = "ssh"
@@ -101,7 +98,8 @@ resource "null_resource" "prepare_pi_boot_filesystem" {
 
   provisioner "remote-exec" {
     inline = [
-      "mkdir ${var.root_tftp_folder}/${each.key} ${var.root_tftp_folder}/${each.value.serial}",
+      "echo hola",
+#      "mkdir ${var.root_tftp_folder}/${each.key} ${var.root_tftp_folder}/${each.value.serial}",
       "sudo mount -t overlay overlay -o lowerdir=${var.root_tftp_folder}/firmware:${var.root_tftp_folder}/${each.key} ${var.root_tftp_folder}/${each.value.serial}"
     ]
   }
@@ -123,7 +121,7 @@ resource "null_resource" "render_bootcmd" {
 
   provisioner "file" {
     destination    = "${var.root_tftp_folder}/${each.key}/cmdline.txt"
-    content        = "console=serial0,115200 dwc_otg.lpm_enable=0 console=tty1 root=/dev/sda1 rootfstype=ext4 ISCSI_INITIATOR=iqn.2019-09.us.tswn.us:${each.key} ISCSI_TARGET_NAME=iqn.2004-04.com.qnap:tvs-882:iscsi.${each.key}.04a272 ISCSI_TARGET_IP=${var.storage_ip} rootwait fixrtc nosplash"
+    content        = "console=serial0,115200 dwc_otg.lpm_enable=0 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory console=tty1 root=/dev/sda1 rootfstype=ext4 ISCSI_INITIATOR=iqn.2019-09.us.tswn.us:${each.key} ISCSI_TARGET_NAME=iqn.2004-04.com.qnap:tvs-882:iscsi.${each.key}.04a272 ISCSI_TARGET_IP=${var.storage_ip} rootwait fixrtc nosplash"
   }
 
   depends_on = [
@@ -135,7 +133,7 @@ resource "null_resource" "transfer_root_volumes" {
   for_each = var.pis
 
   provisioner  "local-exec" {
-    command = "sudo dd bs=4M if=${var.source_images_folder}/${each.key} of=/dev/disk/by-path/ip-${var.storage_ip}:3260-iscsi-iqn.2004-04.com.qnap:tvs-882:iscsi.${each.key}.04a272-lun-0 status=progress && sync"
+    command = "sudo dd bs=4M if=${var.source_images_folder}/${each.key} of=/dev/disk/by-path/ip-${var.storage_ip}:3260-iscsi-iqn.2004-04.com.qnap:tvs-882:iscsi.${each.key}.04a272-lun-0 status=progress; sync"
   }
 
   depends_on = [
@@ -145,7 +143,7 @@ resource "null_resource" "transfer_root_volumes" {
 
 resource "null_resource" "disconnect_resources" {
   provisioner  "local-exec" {
-    command = "sudo iscsiadm -m session -u ; sudo iscsiadm -m node --op delete; sudo umount ${local.temp_dir}"
+    command = "sudo iscsiadm -m session -u ; sudo iscsiadm -m node --op delete; sudo umount ${local.temp_dir}; rm -rf ${local.temp_dir}"
   }
 
   depends_on = [

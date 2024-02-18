@@ -18,11 +18,14 @@ copy-vm-firmware:
 
 .PHONY: init
 init:
-	rm -rf terraform.state terraform.state.backup .terrafom .terraform.lock.hcl && $(TERRAFORM) init -var-file=$(VAR_FILE)
+	rm -rf ${PWD}/terraform.tfstate ${PWD}/terraform.state.backup ${PWD}/.terrafom ${PWD}/.terraform.lock.hcl
+	$(TERRAFORM) init -var-file=$(VAR_FILE)
 
 .PHONY: apply
 apply: init
 	 $(TERRAFORM) apply -var-file=$(VAR_FILE)
+
+
 
 
 
