@@ -86,6 +86,22 @@ resource "null_resource" "copy_firmware" {
   }
 }
 
+resource "null_resource" "render_bootcmd" {
+  for_each = var.pis
+  connection {
+    type = "ssh"
+    host = var.storage_ip
+    user = var.storage_ssh_user
+    private_key = local.storage_ssh_private_key
+    timeout = "20s"
+  }
+
+  provisioner "file" {
+    destination    = "${var.root_tftp_folder}/${each.key}/cmdline.txt"
+    content        = "console=serial0,115200 dwc_otg.lpm_enable=0 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory console=tty1 root=/dev/sda1 rootfstype=ext4 ISCSI_INITIATOR=iqn.2019-09.us.tswn.us:${each.key} ISCSI_TARGET_NAME=iqn.2004-04.com.qnap:tvs-882:iscsi.${each.key}.04a272 ISCSI_TARGET_IP=${var.storage_ip} rootwait fixrtc nosplash"
+  }
+}
+
 resource "null_resource" "prepare_pi_boot_filesystem" {
   for_each = var.pis
   connection {
@@ -105,35 +121,21 @@ resource "null_resource" "prepare_pi_boot_filesystem" {
   }
 
   depends_on = [
+    null_resource.render_bootcmd,
     null_resource.copy_firmware
   ]
 }
 
-resource "null_resource" "render_bootcmd" {
-  for_each = var.pis
-  connection {
-    type = "ssh"
-    host = var.storage_ip
-    user = var.storage_ssh_user
-    private_key = local.storage_ssh_private_key
-    timeout = "20s"
-  }
 
-  provisioner "file" {
-    destination    = "${var.root_tftp_folder}/${each.key}/cmdline.txt"
-    content        = "console=serial0,115200 dwc_otg.lpm_enable=0 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory console=tty1 root=/dev/sda1 rootfstype=ext4 ISCSI_INITIATOR=iqn.2019-09.us.tswn.us:${each.key} ISCSI_TARGET_NAME=iqn.2004-04.com.qnap:tvs-882:iscsi.${each.key}.04a272 ISCSI_TARGET_IP=${var.storage_ip} rootwait fixrtc nosplash"
-  }
-
-  depends_on = [
-    null_resource.prepare_pi_boot_filesystem
-  ]
-}
 
 resource "null_resource" "transfer_root_volumes" {
   for_each = var.pis
 
   provisioner  "local-exec" {
-    command = "sudo dd bs=4M if=${var.source_images_folder}/${each.key} of=/dev/disk/by-path/ip-${var.storage_ip}:3260-iscsi-iqn.2004-04.com.qnap:tvs-882:iscsi.${each.key}.04a272-lun-0 status=progress; sync"
+    inline = [
+      "sudo dd bs=4M if=${var.source_images_folder}/${each.key} of=/dev/disk/by-path/ip-${var.storage_ip}:3260-iscsi-iqn.2004-04.com.qnap:tvs-882:iscsi.${each.key}.04a272-lun-0 status=progress",
+      "sudo sync"
+    ]
   }
 
   depends_on = [
@@ -147,7 +149,7 @@ resource "null_resource" "disconnect_resources" {
   }
 
   depends_on = [
-    null_resource.copy_firmware,
+    null_resource.prepare_pi_boot_filesystem,
     null_resource.transfer_root_volumes,
     null_resource.render_bootcmd
   ]
