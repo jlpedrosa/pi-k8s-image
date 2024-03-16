@@ -7,9 +7,9 @@ variable "storage_ssh_user" {
   description = "Username to connect to the remote server"
 }
 
-variable "storage_ssh_private_key_path" {
-  description = "Path for the key of the user to connect to the remote server"
-}
+ variable "storage_ssh_private_key_path" {
+ description = "Path for the key of the user to connect to the remote server"
+ }
 
 variable "root_tftp_folder" {
   description = "the folder in the remote server that is the root of the tftp server"
@@ -132,10 +132,10 @@ resource "null_resource" "transfer_root_volumes" {
   for_each = var.pis
 
   provisioner  "local-exec" {
-    inline = [
-      "sudo dd bs=4M if=${var.source_images_folder}/${each.key} of=/dev/disk/by-path/ip-${var.storage_ip}:3260-iscsi-iqn.2004-04.com.qnap:tvs-882:iscsi.${each.key}.04a272-lun-0 status=progress",
-      "sudo sync"
-    ]
+    command = <<-EOT
+      sudo dd bs=4M if=${var.source_images_folder}/${each.key} of=/dev/disk/by-path/ip-${var.storage_ip}:3260-iscsi-iqn.2004-04.com.qnap:tvs-882:iscsi.${each.key}.04a272-lun-0 status=progress &&
+      sudo sync  
+    EOT    
   }
 
   depends_on = [

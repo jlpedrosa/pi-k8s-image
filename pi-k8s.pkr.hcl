@@ -47,10 +47,6 @@ variable "disk_size" {
   description = "The size of the resulting/output/generated disk"
 }
 
-variable "kube_version" {
-  default = "1.27103"
-  description = "The version for kubernetes tools to be installed"
-}
 
 variable "operator_username" {
   default = "jose"
@@ -63,7 +59,7 @@ variable "domain" {
 }
 
 variable "operator_ssh_pub_key" {
-  default = "~/.ssh/id_rsa.pub"
+  default = "/home/jose/.ssh/id_ed25519.pub"
   description = "ssh public key associated to the oprator user"
 }
 
