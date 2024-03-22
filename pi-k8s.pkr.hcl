@@ -78,12 +78,8 @@ locals {
 # here we generate the json for cloud-init, so it performs all the configuration of the OS
 # the contents of these variables are located in the files "cloud-init-*-pkr.hcl
 locals {
-  pis_data = [for pi, pival in var.pis :
-    {
-      hostname = pi
+    pi_vm_contents =  {
       user_data = jsonencode({
-        hostname        = pi
-        fqdn            = "${pi}.${var.domain}"
         ssh_pwauth      = true
         users           = local.users
         timezone        = "Europe/Dublin"
@@ -106,7 +102,6 @@ locals {
         runcmd          = local.runcmd
       })
     }
-  ]
 }
 
 # ARM vm, hopefully this will be close enough to a Raspberry pi.
@@ -161,21 +156,17 @@ source "qemu" "ubuntu" {
 
 build {
 
-  dynamic "source" {
-    for_each = local.pis_data
-    labels   = ["qemu.ubuntu"]
-    content {
-      name    = source.value.hostname
-      vm_name = source.value.hostname
-      # cloud-init will get removable devices with "cidata" label, so we create a CD-ROM with
-      # user-data, meta-data.
-      cd_label = "cidata"
-      cd_content = {
+  source "qemu.ubuntu" {   
+   name    = "temp-packer-pi"
+   vm_name = "temp-packer-pi"
+   # cloud-init will get removable devices with "cidata" label, so we create a CD-ROM with
+   # user-data, meta-data.
+   cd_label = "cidata"
+   cd_content = {
         "meta-data" = templatefile("meta-data", {})
-        "user-data" = format("#cloud-config\n%s", source.value.user_data)
+        "user-data" = format("#cloud-config\n%s", local.pi_vm_contents.user_data)
         "config.txt" = templatefile("config.txt", {})
-      }
-    }
+    }    
   }
 
   provisioner "shell" {
@@ -193,8 +184,12 @@ build {
     inline = [
       // uninstall non rapi kernels
       "sudo DEBIAN_FRONTEND=noninteractive apt-get purge --assume-yes $(apt list --installed | grep -E 'virtual|generic' 2>/dev/null  | awk -F'/' '{printf(\"%s \",$1)} END { printf \"\\n\" }')",
+      
       // uninstall unused packages
-      "sudo DEBIAN_FRONTEND=noninteractive apt autoremove --purge && sudo apt-get upgrade"
+      "sudo DEBIAN_FRONTEND=noninteractive apt autoremove --purge && sudo apt-get upgrade",
+
+      //remove /etc/hostname so it picks it up via DHCP
+      "sudo rm /etc/hostname"
     ]
   }
 

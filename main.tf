@@ -19,6 +19,11 @@ variable "source_images_folder" {
   description = "the folder in the remote server that is the root of the tftp server"
 }
 
+variable "source_pi_image" {
+  description = "the image of the root disk for the ISO"
+  default = "/home/jose/src/mylab/03.pi-k8s-image/packer-output/temp-packer-pi"
+}
+
 variable "pis" {
   description = "dictionary with the PIs, keys are pi name"
   # //
@@ -114,7 +119,6 @@ resource "null_resource" "prepare_pi_boot_filesystem" {
 
   provisioner "remote-exec" {
     inline = [
-      "echo hola",
 #      "mkdir ${var.root_tftp_folder}/${each.key} ${var.root_tftp_folder}/${each.value.serial}",
       "sudo mount -t overlay overlay -o lowerdir=${var.root_tftp_folder}/firmware:${var.root_tftp_folder}/${each.key} ${var.root_tftp_folder}/${each.value.serial}"
     ]
@@ -127,13 +131,12 @@ resource "null_resource" "prepare_pi_boot_filesystem" {
 }
 
 
-
 resource "null_resource" "transfer_root_volumes" {
   for_each = var.pis
 
   provisioner  "local-exec" {
     command = <<-EOT
-      sudo dd bs=4M if=${var.source_images_folder}/${each.key} of=/dev/disk/by-path/ip-${var.storage_ip}:3260-iscsi-iqn.2004-04.com.qnap:tvs-882:iscsi.${each.key}.04a272-lun-0 status=progress &&
+      sudo dd bs=4M if=${var.source_pi_image} of=/dev/disk/by-path/ip-${var.storage_ip}:3260-iscsi-iqn.2004-04.com.qnap:tvs-882:iscsi.${each.key}.04a272-lun-0 status=progress &&
       sudo sync  
     EOT    
   }
