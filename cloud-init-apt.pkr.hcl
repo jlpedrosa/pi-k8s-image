@@ -21,6 +21,11 @@ locals {
     "ubuntu-raspi-settings",
     "ubuntu-server-raspi",
     "u-boot-rpi",
+
+    "open-iscsi", "lsscsi",  "sg3-utils",  "multipath-tools", "scsitools",
+
+    "nfs-common",
+    "xfsprogs",
   ]
 }
 

@@ -135,7 +135,7 @@ resource "null_resource" "transfer_root_volumes" {
   for_each = var.pis
 
   provisioner  "local-exec" {
-    command = <<-EOT
+    command = <<EOT
       sudo dd bs=4M if=${var.source_pi_image} of=/dev/disk/by-path/ip-${var.storage_ip}:3260-iscsi-iqn.2004-04.com.qnap:tvs-882:iscsi.${each.key}.04a272-lun-0 status=progress &&
       sudo sync  
     EOT    
