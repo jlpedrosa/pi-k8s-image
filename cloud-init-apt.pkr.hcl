@@ -1,32 +1,38 @@
 
 locals {
-  packages = [
+  packages_common = [
     "apt-transport-https",
     "ca-certificates",
     "curl",
     "gnupg",
     "lsb-release",
-
-    "libraspberrypi-bin",
-    "linux-headers-raspi",
-    "linux-image-raspi",
-    "linux-firmware-raspi",
-    "linux-raspi",
-    "linux-modules-extra-raspi",
-    "linux-tools-raspi",
-    "pibootctl",
-    "raspi-config",
-    "rpiboot",
-    "rpi-eeprom",
-    "ubuntu-raspi-settings",
-    "ubuntu-server-raspi",
-    "u-boot-rpi",
-
-    "open-iscsi", "lsscsi",  "sg3-utils",  "multipath-tools", "scsitools",
-
+    "open-iscsi",
+    "lsscsi",
+    "sg3-utils",
+    "multipath-tools",
+    "scsitools",
     "nfs-common",
     "xfsprogs",
   ]
+
+  packages_arm64 = setunion(local.packages_common, [
+      "libraspberrypi-bin",
+      "linux-headers-raspi",
+      "linux-image-raspi",
+      "linux-firmware-raspi",
+      "linux-raspi",
+      "linux-modules-extra-raspi",
+      "linux-tools-raspi",
+      "pibootctl",
+      "raspi-config",
+      "rpiboot",
+      "rpi-eeprom",
+      "ubuntu-raspi-settings",
+      "ubuntu-server-raspi",
+      "u-boot-rpi",
+    ])
+
+  packages_amd64 = setunion(local.packages_common, [ ])
 }
 
 locals {

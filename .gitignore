@@ -10,4 +10,5 @@ terraform.tfstate
 AAVMF_CODE.fd
 packer-output-golden
 packer-output-broken
+packer-output_old
 packer-output

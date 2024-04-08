@@ -1,5 +1,5 @@
 locals {
   runcmd = [
-     ["ufw", "disable"]
+     ["ufw", "disable"],
   ]
 }
