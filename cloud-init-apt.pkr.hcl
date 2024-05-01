@@ -134,7 +134,7 @@ Pu9n
 EOT
       }
       "helm.list" = {
-        source = "deb [arch=arm64] https://baltocdn.com/helm/stable/debian/ all main"
+        source = "deb [arch=amd64] https://baltocdn.com/helm/stable/debian/ all main"
         key    = <<EOT
 -----BEGIN PGP PUBLIC KEY BLOCK-----
 
