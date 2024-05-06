@@ -13,6 +13,8 @@ locals {
     "scsitools",
     "nfs-common",
     "xfsprogs",
+    "policycoreutils",
+    "selinux-utils"
   ]
 
   packages_arm64 = setunion(local.packages_common, [
