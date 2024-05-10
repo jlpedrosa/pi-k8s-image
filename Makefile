@@ -1,7 +1,7 @@
 TERRAFORM=/home/jose/.tfenv/bin/terraform
 
 .PHONY: build
-build: copy-vm-firmware packer-init packer-run
+build: clean copy-vm-firmware packer-init packer-run
 
 .PHONY: packer-run
 packer-run:
@@ -16,15 +16,9 @@ copy-vm-firmware:
 	cp /usr/share/AAVMF/AAVMF_CODE.fd .
 	cp /usr/share/AAVMF/AAVMF_CODE.fd flash1.img
 
-.PHONY: init
-init:
-	rm -rf ${PWD}/terraform.tfstate ${PWD}/terraform.state.backup ${PWD}/.terrafom ${PWD}/.terraform.lock.hcl
-	$(TERRAFORM) init -var-file=$(VAR_FILE)
-
-.PHONY: apply
-apply: init
-	 $(TERRAFORM) apply -var-file=$(VAR_FILE)
-
+.PHONY: clean
+clean:
+	rm -rf packer-output
 
 
 
