@@ -107,6 +107,7 @@ locals {
       users           = local.users
       timezone        = "Europe/Dublin"
       apt             = local.apt
+      snap            = local.snap
       package_update  = true
       package_upgrade = false
       packages        = local.packages_amd64
@@ -273,14 +274,14 @@ build {
     ]
   }
 
-  provisioner "shell" {
-    inline = [
-      // add igc module and regenerate initramfs so ISCI can connect.
-      "sudo bash -c 'echo 'igc' >> /etc/initramfs-tools/modules'",
-      "sudo apt-get install linux-image-generic",
-      //"sudo update-initramfs -u -v",
-    ]
-  }
+#   provisioner "shell" {
+#     inline = [
+#       // add igc module and regenerate initramfs so ISCI can connect.
+#       # "sudo bash -c 'echo 'igc' >> /etc/initramfs-tools/modules'",
+#       # "sudo apt-get install linux-image-generic",
+#       //"sudo update-initramfs -u -v",
+#     ]
+#   }
 
   provisioner "shell" {
     inline = [

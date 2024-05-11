@@ -6,6 +6,7 @@ locals {
     "curl",
     "gnupg",
     "lsb-release",
+    "jq",
     "open-iscsi",
     "lsscsi",
     "sg3-utils",
