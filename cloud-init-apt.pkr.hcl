@@ -15,7 +15,9 @@ locals {
     "nfs-common",
     "xfsprogs",
     "policycoreutils",
-    "selinux-utils"
+    "selinux-utils",
+    "iotop",
+    "sysstat"
   ]
 
   packages_arm64 = setunion(local.packages_common, [
